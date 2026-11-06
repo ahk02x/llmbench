@@ -1,0 +1,51 @@
+[
+  {
+    "id": "sentiment",
+    "kind": "classify",
+    "prompt": "Classify the sentiment of this review as exactly one word: positive, negative, or neutral.\n\nReview: \"The battery died after two days and support never answered my emails.\"\n\nAnswer with one word only.",
+    "check": {"type": "word", "answer": "negative"}
+  },
+  {
+    "id": "extract_json",
+    "kind": "extract",
+    "prompt": "Extract the fields from this message and reply with ONLY a JSON object with keys \"name\", \"date\", \"amount\" (amount as a number).\n\nMessage: \"Hi, this is Priya Nair. I paid the invoice on 2026-03-14, the total was 482.50 dollars.\"",
+    "check": {"type": "json", "equals": {"name": "Priya Nair", "date": "2026-03-14", "amount": 482.5}}
+  },
+  {
+    "id": "arith_word",
+    "kind": "reason",
+    "prompt": "A shop sells pens at 3 for $4.50. How much do 12 pens cost in dollars? Give the final number on the last line.",
+    "check": {"type": "number", "answer": 18.0}
+  },
+  {
+    "id": "arith_multi",
+    "kind": "reason",
+    "prompt": "A train leaves at 09:40 and the trip takes 2 hours 35 minutes. It stops for 20 minutes midway, and that stop is NOT included in the 2h35m. What time does it arrive? Reply with the time in 24-hour HH:MM on the last line.",
+    "check": {"type": "contains", "answer": "12:35"}
+  },
+  {
+    "id": "odd_one",
+    "kind": "reason",
+    "prompt": "Which one does not belong: apple, banana, carrot, grape? Answer with one word only.",
+    "check": {"type": "word", "answer": "carrot"}
+  },
+  {
+    "id": "format_lines",
+    "kind": "instruction",
+    "prompt": "Give exactly 3 tips for sleeping better. Each tip must be on its own line and start with \"- \". No intro, no outro, nothing else.",
+    "check": {"type": "lines", "count": 3, "prefix": "- "}
+  },
+  {
+    "id": "iso_date",
+    "kind": "format",
+    "prompt": "Convert this date to ISO 8601 (YYYY-MM-DD) and reply with only the date: \"3rd of November, 2026\"",
+    "check": {"type": "contains", "answer": "2026-11-03"}
+  },
+  {
+    "id": "needle",
+    "kind": "context",
+    "prompt": "{{HAYSTACK}}\n\nQuestion: what is the vault passphrase mentioned in the text above? Reply with only the passphrase.",
+    "haystack_needle": "The vault passphrase is cobalt-tangerine-47.",
+    "check": {"type": "contains", "answer": "cobalt-tangerine-47"}
+  }
+]
