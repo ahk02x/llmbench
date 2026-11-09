@@ -2,7 +2,7 @@
 
 ## RTX 3080 12 GB
 
-Ollama 0.32.5; measurements on 2026-11-02. Latest row per model on this GPU. Under the harness default, generation rates are medians of three calls per prompt (run count was not saved); load and tasks are single calls. The stored cold_load_s field is a first-request load duration, not a verified cold start: the harness does not force an unload. GPU share is Ollama's reported allocation ratio. See [REPORT.md](REPORT.md) for method and limitations.
+Ollama 0.32.5; measurements on 2026-11-02. Latest legacy row per model on this GPU; schema 2 sessions are excluded. Under the harness default, generation rates are medians of three calls per prompt (run count was not saved); load and tasks are single calls. The stored cold_load_s field is a first-request load duration, not a verified cold start: that historical harness did not force an unload. GPU share is Ollama's reported allocation ratio. See [REPORT.md](REPORT.md) for method and limitations.
 
 | model | allocation GB | GPU share | short gen tok/s | long gen tok/s | first load s | tasks |
 |---|---:|---:|---:|---:|---:|---|
@@ -20,7 +20,7 @@ Ollama 0.32.5; measurements on 2026-11-02. Latest row per model on this GPU. Und
 
 ## RTX 2070 SUPER 8 GB
 
-Ollama 0.32.1; measurements on 2026-11-05. Latest row per model on this GPU. Generation rates use the same harness default; run count was not saved. Mistral allocation and GPU share were not recorded because the earlier `/api/ps` lookup missed its `:latest` tag.
+Ollama 0.32.1; measurements on 2026-11-05. Latest legacy row per model on this GPU; schema 2 sessions are excluded. Generation rates use the same harness default; run count was not saved. Mistral allocation and GPU share were not recorded because the earlier `/api/ps` lookup missed its `:latest` tag.
 
 | model | allocation GB | GPU share | short gen tok/s | long gen tok/s | first load s | tasks |
 |---|---:|---:|---:|---:|---:|---|
@@ -31,7 +31,7 @@ Ollama 0.32.1; measurements on 2026-11-05. Latest row per model on this GPU. Gen
 
 ## Apple M3 16 GB unified
 
-Ollama 0.40.14; measurements on 2026-11-05. Latest row per model on this machine. Generation rates use the same harness default; run count was not saved. GPU share is Ollama's reported allocation ratio in a shared CPU/GPU memory pool, not a discrete VRAM boundary.
+Ollama 0.40.14; measurements on 2026-11-05. Latest legacy row per model on this machine; schema 2 sessions are excluded. Generation rates use the same harness default; run count was not saved. GPU share is Ollama's reported allocation ratio in a shared CPU/GPU memory pool, not a discrete VRAM boundary.
 
 | model | allocation GB | GPU share | short gen tok/s | long gen tok/s | first load s | tasks |
 |---|---:|---:|---:|---:|---:|---|

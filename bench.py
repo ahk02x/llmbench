@@ -7,10 +7,11 @@
 
 The default host and label come from bench.local.json (git-ignored, e.g. {"host": "http://gpu-box:11434",
 "label": "rtx3080"}), else LLMBENCH_HOST / LLMBENCH_LABEL, else localhost. Results never store the host URL:
-one JSON line per model is appended to results/<label>-<date>.jsonl, and a table is printed.
+Version 2 summaries append to results/<label>-<date>-v2.jsonl; per-call events survive later failures.
 Speed numbers are only comparable on an idle GPU: an open RDP session on the PC pins it in P0.
 """
 import argparse, json, re, sys, time, urllib.request, datetime, pathlib
+import hashlib, statistics, uuid, http.client
 
 HERE = pathlib.Path(__file__).parent
 import os
@@ -32,11 +33,77 @@ def call(host, path, body=None, timeout=600):
 def generate(host, model, prompt, num_predict, cfg=None, keep="10m"):
     """cfg: per-model overrides from ladders.json: think (false / "low"), num_ctx."""
     cfg = cfg or {}
-    body = {"model": model, "prompt": prompt, "stream": False, "keep_alive": keep,
+    body = {"model": model, "prompt": prompt, "stream": True, "keep_alive": keep,
             "options": {**SEED, "num_predict": num_predict, **({"num_ctx": cfg["num_ctx"]} if "num_ctx" in cfg else {})}}
     if "think" in cfg:
         body["think"] = cfg["think"]
-    return call(host, "/api/generate", body)
+    req = urllib.request.Request(host + "/api/generate", data=json.dumps(body).encode(),
+                                 headers={"Content-Type": "application/json"})
+    start = time.perf_counter()
+    first_output = first_answer = None
+    answer, thinking, final = [], [], None
+    with urllib.request.urlopen(req, timeout=600) as response:
+        for line in response:
+            if not line.strip():
+                continue
+            d = json.loads(line)
+            if "error" in d:
+                raise ValueError(d["error"])
+            elapsed = time.perf_counter() - start
+            if (d.get("response") or d.get("thinking")) and first_output is None:
+                first_output = elapsed
+            if d.get("response") and first_answer is None:
+                first_answer = elapsed
+            answer.append(d.get("response", ""))
+            thinking.append(d.get("thinking", ""))
+            if d.get("done"):
+                final = d
+                break
+    if final is None:
+        raise ValueError("generation stream ended without a completed response")
+    return {**final, "response": "".join(answer), "thinking": "".join(thinking),
+            "wall_s": time.perf_counter() - start, "first_output_s": first_output,
+            "first_answer_s": first_answer}
+
+
+def identity(host, model):
+    entry = next((m for m in call(host, "/api/tags")["models"]
+                  if m["name"] in (model, model + ":latest")), None)
+    if entry is None or not entry.get("digest"):
+        raise ValueError("model digest unavailable; cannot identify this measurement")
+    return {k: entry.get(k) for k in ("name", "digest", "size", "details")}
+
+
+def allocation(host, model):
+    entry = next((m for m in call(host, "/api/ps")["models"]
+                  if m["name"] in (model, model + ":latest")), None)
+    return {k: entry.get(k) for k in ("name", "digest", "size", "size_vram", "context_length")} if entry else None
+
+
+def sample(host, model, prompt, limit, cfg, phase, index, record):
+    """Journal each completed call immediately, so a later failure cannot erase it."""
+    d = generate(host, model, prompt, limit, cfg)
+    if d.get("eval_count") is None or not d.get("eval_duration"):
+        raise ValueError("missing generation counters; no speed can be measured")
+    s = {"phase": phase, "index": index, "prompt": prompt,
+         "prompt_sha256": hashlib.sha256(prompt.encode()).hexdigest(), "output_limit": limit,
+         **{k: d.get(k) for k in ("response", "thinking", "done_reason", "eval_count", "eval_duration",
+            "prompt_eval_count", "prompt_eval_duration", "prompt_eval_cached_count", "load_duration",
+            "total_duration", "wall_s", "first_output_s", "first_answer_s")},
+         "gen_tps": tps(d), "truncated": d.get("done_reason") == "length"}
+    record({"event": "sample", **s})
+    # Timing has stopped before this diagnostic request.
+    s["allocation_after"] = allocation(host, model)
+    record({"event": "allocation", "phase": phase, "index": index, "allocation": s["allocation_after"]})
+    return s
+
+
+def summarize(samples):
+    rates = [s["gen_tps"] for s in samples]
+    return {"gen_tps": round(statistics.median(rates), 1), "gen_min": round(min(rates), 1),
+            "gen_max": round(max(rates), 1), "runs": len(samples), "samples": samples,
+            "prompt_tokens": samples[-1]["prompt_eval_count"],
+            "cache_protocol": "repeated prompt; cache reuse possible; not uncached prefill"}
 
 
 def pull(host, tag):
@@ -116,62 +183,56 @@ def unload(host, model, wait_s=30):
     return False
 
 
-def bench_model(host, model, runs, tasks, cfg=None):
+def bench_model(host, model, runs, tasks, cfg=None, record=lambda event: None):
     cfg = cfg or {}
-    out = {"model": model, "cfg": cfg}
-    out["unloaded_first"] = unload(host, model)  # so the load below starts with the model out of memory
-    first = generate(host, model, "Say OK.", 4, cfg)  # forces the load; the OS file cache may still be warm
-    out["cold_load_s"] = round(first["load_duration"] / 1e9, 1)
-
-    ps = next((m for m in call(host, "/api/ps")["models"] if m["name"] in (model, model + ":latest")), None)
+    out = {"model": model, "cfg": cfg, "runs": runs}
+    out["unloaded_first"] = unload(host, model)
+    first = generate(host, model, "Say OK.", 4, cfg)
+    out["load_request"] = first
+    out["first_load_s"] = first.get("load_duration", 0) / 1e9
+    record({"event": "warmup", "unloaded_first": out["unloaded_first"], "response": first})
+    ps = allocation(host, model)
     if ps:
         out["size_gb"] = round(ps["size"] / 1e9, 1)
         out["vram_pct"] = round(100 * ps["size_vram"] / ps["size"]) if ps["size"] else None
-
     short = "Write a 120-word explanation of how a hash table handles collisions."
     long_ = haystack("Filler.", 1100) + "\n\nSummarize the text above in two sentences."
     for label, prompt in (("short", short), ("long", long_)):
-        gens, pes, ctx = [], [], 0
-        for _ in range(runs):
-            d = generate(host, model, prompt, 200, cfg)
-            gens.append(tps(d)); pes.append(ptps(d)); ctx = d["prompt_eval_count"]
-        gens.sort(); pes.sort()
-        out[label] = {"gen_tps": round(gens[len(gens) // 2], 1), "prompt_tps": round(pes[len(pes) // 2]),
-                      "gen_min": round(gens[0], 1), "gen_max": round(gens[-1], 1), "prompt_tokens": ctx}
-
+        samples = [sample(host, model, prompt, 200, cfg, label, i, record) for i in range(runs)]
+        out[label] = summarize(samples)
     results = []
     for t in tasks:
-        p = t["prompt"]
-        if "{{HAYSTACK}}" in p:
-            p = p.replace("{{HAYSTACK}}", haystack(t["haystack_needle"]))
-        d = generate(host, model, p, cfg.get("max_tokens", 400), cfg)
+        prompt = t["prompt"].replace("{{HAYSTACK}}", haystack(t.get("haystack_needle", "")))
+        d = sample(host, model, prompt, cfg.get("max_tokens", 400), cfg, "task:" + t["id"], 0, record)
         results.append({"id": t["id"], "kind": t["kind"], "pass": check(t["check"], d["response"]),
-                        "truncated": d.get("done_reason") == "length",  # hit the token cap: a harness limit, not a model error
-                        "answer": strip_think(d["response"])[:200]})
+                        "truncated": d["truncated"], "answer": d["response"], "sample": d})
     out["quality"] = {"passed": sum(r["pass"] for r in results), "total": len(results), "tasks": results}
     return out
 
 
-def ctx_sweep(host, model, cfg, ctxs):
-    """Same model at growing context windows: how much still fits in VRAM, and what that does to speed.
-    The prompt fills ~60% of the window, so the KV cache is genuinely in use, not just reserved."""
+def ctx_sweep(host, model, cfg, ctxs, runs=3, record=lambda event: None):
+    """Repeat each window; actual input counts are retained, cache state is not controlled."""
     rows = []
     for n in ctxs:
         c = {**cfg, "num_ctx": n}
-        generate(host, model, "Say OK.", 4, c)  # (re)load at this window size
-        ps = next((m for m in call(host, "/api/ps")["models"] if m["name"] in (model, model + ":latest")), None)
+        first = generate(host, model, "Say OK.", 4, c)
+        record({"event": "warmup", "num_ctx": n, "response": first})
         words = int(n * 0.6 / 1.14)
-        d = generate(host, model, haystack("Filler.", words) + "\n\nSummarize the text above in one sentence.", 100, c)
-        rows.append({"num_ctx": n, "size_gb": round(ps["size"] / 1e9, 1) if ps else None,
-                     "vram_pct": round(100 * ps["size_vram"] / ps["size"]) if ps and ps["size"] else None,
-                     "prompt_tokens": d["prompt_eval_count"], "gen_tps": round(tps(d), 1),
-                     "prompt_tps": round(ptps(d))})
-        print(f"   ctx {n:>6}: {rows[-1]['size_gb']} GB, {rows[-1]['vram_pct']}% in VRAM, "
-              f"{rows[-1]['gen_tps']} gen t/s, {rows[-1]['prompt_tps']} prompt t/s", flush=True)
+        prompt = haystack("Filler.", words) + "\n\nSummarize the text above in one sentence."
+        samples = [sample(host, model, prompt, 100, c, f"ctx:{n}", i, record) for i in range(runs)]
+        rows.append({"num_ctx": n, **summarize(samples)})
+        print(f"   ctx {n:>6}: {rows[-1]['gen_tps']} gen t/s ({runs} calls)", flush=True)
     return rows
 
 
-def main():
+def append_json(path, row):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a") as f:
+        f.write(json.dumps(row) + "\n")
+        f.flush()
+
+
+def run():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--host", default=DEFAULT_HOST)
     ap.add_argument("--label",
@@ -183,6 +244,14 @@ def main():
     ap.add_argument("--pull", action="store_true", help="download any model that is not on the host yet")
     ap.add_argument("--ctx", help="comma list of context sizes: run the context sweep instead of the task suite")
     a = ap.parse_args()
+    if a.runs < 1:
+        ap.error("--runs must be at least 1")
+    try:
+        ctxs = [int(x) for x in a.ctx.split(",")] if a.ctx else None
+        if ctxs is not None and any(n < 256 for n in ctxs):
+            raise ValueError()
+    except ValueError:
+        ap.error("--ctx must contain comma-separated integers of at least 256")
 
     try:
         version = call(a.host, "/api/version", timeout=8)["version"]
@@ -202,11 +271,13 @@ def main():
     tasks = json.loads((HERE / "tasks.json").read_text())
     if a.pull:
         for m in models:
-            if m not in installed and not any(i.startswith(m) for i in installed):
+            if m not in installed and m + ":latest" not in installed:
                 print(f"-> pulling {m} ...", flush=True)
                 if not pull(a.host, m):
                     sys.exit(f"could not pull {m}")
 
+    if a.pull:
+        installed = [m["name"] for m in call(a.host, "/api/tags")["models"]]
     have = lambda m: m in installed or m + ":latest" in installed
     missing = [m for m in models if not have(m)]
     if missing:
@@ -220,45 +291,65 @@ def main():
     label = a.label or (DEFAULT_LABEL if a.host == DEFAULT_HOST else "") \
         or ("local" if any(h in a.host for h in ("127.0.0.1", "localhost")) else "remote")
     label = re.sub(r'[^a-z0-9]+', '-', label.lower()).strip('-')
-    outfile = HERE / "results" / f"{label}-{stamp:%Y-%m-%d}.jsonl"
-    rows, failed = [], []
-    if a.ctx:
-        ctxs = [int(x) for x in a.ctx.split(",")]
-        for m in models:
-            print(f"-> context sweep {m} ...", flush=True)
-            sweep = ctx_sweep(a.host, m, cfgs.get(m, {}), ctxs)
-            with open(outfile.with_name(outfile.stem + "-ctx.jsonl"), "a") as f:
-                f.write(json.dumps({"ts": stamp.isoformat(timespec="seconds"), "host": label, "ollama": version,
-                                    "note": a.note, "model": m, "sweep": sweep}) + "\n")
-        return
+    session = str(uuid.uuid4())
+    outfile = HERE / "results" / f"{label or 'unnamed'}-{stamp:%Y-%m-%d}-v2.jsonl"
+    journal = outfile.with_suffix(".events.jsonl")
+    source_hashes = {name: hashlib.sha256((HERE / name).read_bytes()).hexdigest()
+                     for name in ("bench.py", "tasks.json", "ladders.json")}
+    base = {"schema_version": 2, "session_id": session, "host": label, "ollama": version,
+            "note": a.note, "source_sha256": source_hashes, "requested_runs": a.runs,
+            "model_order": models, "context_order": ctxs,
+            "sampling_options": SEED, "mode": "context" if ctxs else "speed_tasks"}
+    failed = []
     for m in models:
-        print(f"-> {m} ...", flush=True)
+        meta = {**base, "model": m, "cfg": cfgs.get(m, {})}
+        def record(event):
+            append_json(journal, {**meta, "ts": datetime.datetime.now().astimezone().isoformat(), **event})
         try:
-            result = bench_model(a.host, m, a.runs, tasks, cfgs.get(m))
-        except (OSError, KeyError, ValueError) as e:  # out of memory, server dropped, odd response: skip, keep going
+            record({"event": "start"})
+            print(f"-> {m} ...", flush=True)
+            meta["model_identity"] = identity(a.host, m)
+            record({"event": "identity"})
+            if ctxs:
+                result = {"sweep": ctx_sweep(a.host, m, cfgs.get(m, {}), ctxs, a.runs, record)}
+            else:
+                result = bench_model(a.host, m, a.runs, tasks, cfgs.get(m), record)
+            after = identity(a.host, m)
+            if after["digest"] != meta["model_identity"]["digest"]:
+                raise ValueError("model tag changed digest during measurement")
+            row = {**meta, **result, "status": "complete"}
+        except (OSError, http.client.HTTPException, KeyError, ValueError, TypeError, KeyboardInterrupt) as e:
+            # Preserve failed attempts without publishing a misleading complete summary.
+            # Avoid persisting exception strings, which can contain a private host URL.
+            row = {**meta, "status": "interrupted" if isinstance(e, KeyboardInterrupt) else "failed",
+                   "error_type": type(e).__name__, "detail": "See terminal; completed samples retained in event journal"}
             failed.append(m)
-            print(f"   FAILED {m}: {e}\n   (no row written; mention it when you submit results)", flush=True)
+            print(f"   {row['status'].upper()} {m}: {e}", flush=True)
+            record({"event": "finish", **row})
+            append_json(outfile, {**row, "ts": datetime.datetime.now().astimezone().isoformat()})
+            if isinstance(e, KeyboardInterrupt):
+                return 130
             continue
-        row = {"ts": stamp.isoformat(timespec="seconds"), "host": label, "ollama": version, "note": a.note, **result}
-        rows.append(row)
-        with open(outfile, "a") as f:
-            f.write(json.dumps(row) + "\n")
+        row["ts"] = datetime.datetime.now().astimezone().isoformat()
+        append_json(outfile, row)
+        record({"event": "finish", "status": "complete"})
+        if not ctxs:
+            print(f"   {row['short']['gen_tps']} short / {row['long']['gen_tps']} long gen t/s; "
+                  f"{row['quality']['passed']}/{row['quality']['total']} smoke tasks")
+    print("Repeated prompts may reuse cache. No uncached prefill claim is made.")
+    print(f"saved -> {outfile}\nevents -> {journal}")
+    return 1 if failed else 0
 
-    if not rows:
-        sys.exit(f"\nno model finished; failed: {', '.join(failed)}")
-    print(f"\n{'model':<22}{'GB':>5}{'VRAM%':>7}{'load s':>8}{'gen t/s':>9}{'long t/s':>9}{'quality':>9}")
-    for r in rows:
-        q = r["quality"]
-        print(f"{r['model']:<22}{r.get('size_gb', '?'):>5}{str(r.get('vram_pct', '?')):>7}{r['cold_load_s']:>8}"
-              f"{r['short']['gen_tps']:>9}{r['long']['gen_tps']:>9}"
-              f"{q['passed']:>6}/{q['total']}")
-    print("\nprompt-eval rates are saved in the JSONL but not shown: the speed prompts repeat and per-call"
-          "\ntiming isn't kept, so they are not a valid prefill speed. Don't quote them (README, method rule 8).")
-    if failed:
-        print(f"\nfailed (no row): {', '.join(failed)}")
-    if rows:
-        print(f"\nsaved -> {outfile}")
+
+def main():
+    try:
+        return run()
+    except KeyboardInterrupt:
+        # Also cover startup, between models and writes outside the measured call.
+        # A parsed complete summary remains authoritative if its finish event is absent.
+        print("Interrupted; retain the summary and event files, including any incomplete tail.", file=sys.stderr)
+        return 130
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

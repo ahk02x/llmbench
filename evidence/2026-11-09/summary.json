@@ -1,0 +1,865 @@
+{
+  "date": "2026-11-09",
+  "overnight_sessions": 1,
+  "collector_sessions": 4,
+  "protocol": {
+    "runs_per_speed_prompt": 5,
+    "num_ctx": 2048,
+    "seed": 7,
+    "temperature": 0,
+    "speed_output_limit": 200,
+    "smoke_tasks": 8,
+    "repeated_prompt_cache_possible": true
+  },
+  "not_run": {
+    "rtx2070s": "Skipped to avoid interrupting an existing workload. Read-only pre/postflight only; no new inference measurements."
+  },
+  "limitations": [
+    "Different Ollama versions/backends and output lengths",
+    "Mac background applications retained; swap was about 7.2 GiB immediately before its run",
+    "Mac-local client versus LAN requests to RTX 3080; first output is a streamed-chunk observation, not isolated hardware latency",
+    "Some host runs overlapped on the shared Mac controller; see condition timestamps",
+    "One overnight session; no separate-day repeatability, wall energy or uncached-prefill measurement",
+    "No new context sweep or optional models; historical tables unchanged"
+  ],
+  "raw_artifacts": [
+    {
+      "file": "m3-2026-11-09-v2.events.jsonl",
+      "sha256": "47e6a4960d29a13c7bdf337dc61ec6b185fb592b302d3cee122142f64713809c"
+    },
+    {
+      "file": "m3-2026-11-09-v2.jsonl",
+      "sha256": "2fd835f5f637f830cafc6f9f81a620c4f485570221bcde5ae424a4f76c9f43aa"
+    },
+    {
+      "file": "rtx3080-2026-11-09-v2.events.jsonl",
+      "sha256": "52e95f8a14a73968e7ada33a82153e5057ca3cd64826394cb24ca2eb17cd7f78"
+    },
+    {
+      "file": "rtx3080-2026-11-09-v2.jsonl",
+      "sha256": "2ddfb6ebdce9953437283a406c0283da4495a7baa0d219c997784876e08faec8"
+    }
+  ],
+  "rows": [
+    {
+      "host": "m3",
+      "model": "qwen2.5:14b",
+      "session_id": "c2c2b132-3ed9-4007-b5b8-b72af31cf0e0",
+      "ollama": "0.40.14",
+      "cfg": {
+        "num_ctx": 2048
+      },
+      "model_identity": {
+        "name": "qwen2.5:14b",
+        "digest": "7cdf5a0187d5c58cc5d369b255592f7841d1c4696d45a8c8a9489440385b22f6",
+        "size": 8988124069,
+        "details": {
+          "parent_model": "",
+          "format": "gguf",
+          "family": "qwen2",
+          "families": [
+            "qwen2"
+          ],
+          "parameter_size": "14.8B",
+          "quantization_level": "Q4_K_M",
+          "context_length": 32768,
+          "embedding_length": 5120,
+          "runner": "ggml"
+        }
+      },
+      "source_sha256": {
+        "bench.py": "866ebd4a896c30598db4b08e2329876aa199c689bc03209f6fcee6d17362f7fc",
+        "tasks.json": "af36491ba34da8c3396870d40b8a6006bce939ea5b530033300c1f17b21f8d5f",
+        "ladders.json": "6cdd98b5223b410d844de74706dba25a39f0acf6bd983c430080fb27f6b39844"
+      },
+      "ts": "2026-11-09T04:12:48.927199-05:00",
+      "status": "complete",
+      "vram_pct": 100,
+      "size_gb": 9.1,
+      "quality": {
+        "passed": 7,
+        "total": 8,
+        "failed_tasks": [
+          "arith_multi"
+        ],
+        "truncated_tasks": 0
+      },
+      "short": {
+        "median_gen_tps": 9.3,
+        "min_gen_tps": 9.1,
+        "max_gen_tps": 9.7,
+        "median_first_output_s": 0.163,
+        "median_wall_s": 18.16,
+        "samples": [
+          {
+            "index": 0,
+            "eval_count": 166,
+            "eval_duration": 18314462000,
+            "prompt_eval_count": 45,
+            "prompt_eval_duration": 360729000,
+            "prompt_eval_cached_count": 24,
+            "wall_s": 18.89784962500562,
+            "first_output_s": 0.40061658300692216,
+            "first_answer_s": 0.40061658300692216,
+            "truncated": false,
+            "done_reason": "stop"
+          },
+          {
+            "index": 1,
+            "eval_count": 166,
+            "eval_duration": 17811527000,
+            "prompt_eval_count": 45,
+            "prompt_eval_duration": 117912000,
+            "prompt_eval_cached_count": 44,
+            "wall_s": 18.159843875007937,
+            "first_output_s": 0.1603672909841407,
+            "first_answer_s": 0.1603672909841407,
+            "truncated": false,
+            "done_reason": "stop"
+          },
+          {
+            "index": 2,
+            "eval_count": 166,
+            "eval_duration": 17272350000,
+            "prompt_eval_count": 45,
+            "prompt_eval_duration": 107240000,
+            "prompt_eval_cached_count": 44,
+            "wall_s": 17.62745020899456,
+            "first_output_s": 0.31706025000312366,
+            "first_answer_s": 0.31706025000312366,
+            "truncated": false,
+            "done_reason": "stop"
+          },
+          {
+            "index": 3,
+            "eval_count": 166,
+            "eval_duration": 17137538000,
+            "prompt_eval_count": 45,
+            "prompt_eval_duration": 107496000,
+            "prompt_eval_cached_count": 44,
+            "wall_s": 17.318678582989378,
+            "first_output_s": 0.16344491700874642,
+            "first_answer_s": 0.16344491700874642,
+            "truncated": false,
+            "done_reason": "stop"
+          },
+          {
+            "index": 4,
+            "eval_count": 166,
+            "eval_duration": 18284979000,
+            "prompt_eval_count": 45,
+            "prompt_eval_duration": 106281000,
+            "prompt_eval_cached_count": 44,
+            "wall_s": 18.430367499997374,
+            "first_output_s": 0.11550791701301932,
+            "first_answer_s": 0.11550791701301932,
+            "truncated": false,
+            "done_reason": "stop"
+          }
+        ]
+      },
+      "long": {
+        "median_gen_tps": 9.0,
+        "min_gen_tps": 8.8,
+        "max_gen_tps": 9.4,
+        "median_first_output_s": 0.151,
+        "median_wall_s": 4.973,
+        "samples": [
+          {
+            "index": 0,
+            "eval_count": 42,
+            "eval_duration": 4752874000,
+            "prompt_eval_count": 1252,
+            "prompt_eval_duration": 13135204000,
+            "prompt_eval_cached_count": 24,
+            "wall_s": 18.264134458993794,
+            "first_output_s": 13.52300483401632,
+            "first_answer_s": 13.52300483401632,
+            "truncated": false,
+            "done_reason": "stop"
+          },
+          {
+            "index": 1,
+            "eval_count": 42,
+            "eval_duration": 4639036000,
+            "prompt_eval_count": 1252,
+            "prompt_eval_duration": 125608000,
+            "prompt_eval_cached_count": 1251,
+            "wall_s": 4.972809583996423,
+            "first_output_s": 0.15056875001755543,
+            "first_answer_s": 0.15056875001755543,
+            "truncated": false,
+            "done_reason": "stop"
+          },
+          {
+            "index": 2,
+            "eval_count": 42,
+            "eval_duration": 4701194000,
+            "prompt_eval_count": 1252,
+            "prompt_eval_duration": 110895000,
+            "prompt_eval_cached_count": 1251,
+            "wall_s": 5.043356042006053,
+            "first_output_s": 0.3030958750168793,
+            "first_answer_s": 0.3030958750168793,
+            "truncated": false,
+            "done_reason": "stop"
+          },
+          {
+            "index": 3,
+            "eval_count": 42,
+            "eval_duration": 4644356000,
+            "prompt_eval_count": 1252,
+            "prompt_eval_duration": 112373000,
+            "prompt_eval_cached_count": 1251,
+            "wall_s": 4.79753941699164,
+            "first_output_s": 0.14464337500976399,
+            "first_answer_s": 0.14464337500976399,
+            "truncated": false,
+            "done_reason": "stop"
+          },
+          {
+            "index": 4,
+            "eval_count": 42,
+            "eval_duration": 4446514000,
+            "prompt_eval_count": 1252,
+            "prompt_eval_duration": 112238000,
+            "prompt_eval_cached_count": 1251,
+            "wall_s": 4.5817375000042375,
+            "first_output_s": 0.12502437498187646,
+            "first_answer_s": 0.12502437498187646,
+            "truncated": false,
+            "done_reason": "stop"
+          }
+        ]
+      },
+      "started_at": "2026-11-09T04:09:30.292756-05:00",
+      "finished_at": "2026-11-09T04:12:48.947980-05:00",
+      "controller": "m3"
+    },
+    {
+      "host": "m3",
+      "model": "qwen2.5:7b",
+      "session_id": "6575c617-3921-41cb-8d0d-5b0434479f63",
+      "ollama": "0.40.14",
+      "cfg": {
+        "num_ctx": 2048
+      },
+      "model_identity": {
+        "name": "qwen2.5:7b",
+        "digest": "845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e",
+        "size": 4683087332,
+        "details": {
+          "parent_model": "",
+          "format": "gguf",
+          "family": "qwen2",
+          "families": [
+            "qwen2"
+          ],
+          "parameter_size": "7.6B",
+          "quantization_level": "Q4_K_M",
+          "context_length": 32768,
+          "embedding_length": 3584,
+          "runner": "ggml"
+        }
+      },
+      "source_sha256": {
+        "bench.py": "866ebd4a896c30598db4b08e2329876aa199c689bc03209f6fcee6d17362f7fc",
+        "tasks.json": "af36491ba34da8c3396870d40b8a6006bce939ea5b530033300c1f17b21f8d5f",
+        "ladders.json": "6cdd98b5223b410d844de74706dba25a39f0acf6bd983c430080fb27f6b39844"
+      },
+      "ts": "2026-11-09T04:09:30.064997-05:00",
+      "status": "complete",
+      "vram_pct": 100,
+      "size_gb": 4.6,
+      "quality": {
+        "passed": 7,
+        "total": 8,
+        "failed_tasks": [
+          "arith_multi"
+        ],
+        "truncated_tasks": 0
+      },
+      "short": {
+        "median_gen_tps": 18.8,
+        "min_gen_tps": 18.5,
+        "max_gen_tps": 19.0,
+        "median_first_output_s": 0.064,
+        "median_wall_s": 6.851,
+        "samples": [
+          {
+            "index": 0,
+            "eval_count": 127,
+            "eval_duration": 6781371000,
+            "prompt_eval_count": 45,
+            "prompt_eval_duration": 179480000,
+            "prompt_eval_cached_count": 24,
+            "wall_s": 6.97553237498505,
+            "first_output_s": 0.18570949998684227,
+            "first_answer_s": 0.18570949998684227,
+            "truncated": false,
+            "done_reason": "stop"
+          },
+          {
+            "index": 1,
+            "eval_count": 127,
+            "eval_duration": 6674358000,
+            "prompt_eval_count": 45,
+            "prompt_eval_duration": 55835000,
+            "prompt_eval_cached_count": 44,
+            "wall_s": 6.742466749972664,
+            "first_output_s": 0.06355370799428783,
+            "first_answer_s": 0.06355370799428783,
+            "truncated": false,
+            "done_reason": "stop"
+          },
+          {
+            "index": 2,
+            "eval_count": 127,
+            "eval_duration": 6872265000,
+            "prompt_eval_count": 45,
+            "prompt_eval_duration": 51441000,
+            "prompt_eval_cached_count": 44,
+            "wall_s": 6.944745957996929,
+            "first_output_s": 0.05899208300979808,
+            "first_answer_s": 0.05899208300979808,
+            "truncated": false,
+            "done_reason": "stop"
+          },
+          {
+            "index": 3,
+            "eval_count": 127,
+            "eval_duration": 6758859000,
+            "prompt_eval_count": 45,
+            "prompt_eval_duration": 59495000,
+            "prompt_eval_cached_count": 44,
+            "wall_s": 6.851161415979732,
+            "first_output_s": 0.0827347079757601,
+            "first_answer_s": 0.0827347079757601,
+            "truncated": false,
+            "done_reason": "stop"
+          },
+          {
+            "index": 4,
+            "eval_count": 127,
+            "eval_duration": 6702427000,
+            "prompt_eval_count": 45,
+            "prompt_eval_duration": 54189000,
+            "prompt_eval_cached_count": 44,
+            "wall_s": 6.767405999999028,
+            "first_output_s": 0.06057833298109472,
+            "first_answer_s": 0.06057833298109472,
+            "truncated": false,
+            "done_reason": "stop"
+          }
+        ]
+      },
+      "long": {
+        "median_gen_tps": 18.7,
+        "min_gen_tps": 17.8,
+        "max_gen_tps": 19.1,
+        "median_first_output_s": 0.065,
+        "median_wall_s": 2.698,
+        "samples": [
+          {
+            "index": 0,
+            "eval_count": 49,
+            "eval_duration": 2577885000,
+            "prompt_eval_count": 1252,
+            "prompt_eval_duration": 6121575000,
+            "prompt_eval_cached_count": 24,
+            "wall_s": 8.716163167002378,
+            "first_output_s": 6.132467582996469,
+            "first_answer_s": 6.132467582996469,
+            "truncated": false,
+            "done_reason": "stop"
+          },
+          {
+            "index": 1,
+            "eval_count": 49,
+            "eval_duration": 2566982000,
+            "prompt_eval_count": 1252,
+            "prompt_eval_duration": 53556000,
+            "prompt_eval_cached_count": 1251,
+            "wall_s": 2.6362963749852497,
+            "first_output_s": 0.06420945798163302,
+            "first_answer_s": 0.06420945798163302,
+            "truncated": false,
+            "done_reason": "stop"
+          },
+          {
+            "index": 2,
+            "eval_count": 49,
+            "eval_duration": 2757670000,
+            "prompt_eval_count": 1252,
+            "prompt_eval_duration": 55557000,
+            "prompt_eval_cached_count": 1251,
+            "wall_s": 2.8282362500031013,
+            "first_output_s": 0.06341400000383146,
+            "first_answer_s": 0.06341400000383146,
+            "truncated": false,
+            "done_reason": "stop"
+          },
+          {
+            "index": 3,
+            "eval_count": 49,
+            "eval_duration": 2627211000,
+            "prompt_eval_count": 1252,
+            "prompt_eval_duration": 58463000,
+            "prompt_eval_cached_count": 1251,
+            "wall_s": 2.69827283298946,
+            "first_output_s": 0.06846537499222904,
+            "first_answer_s": 0.06846537499222904,
+            "truncated": false,
+            "done_reason": "stop"
+          },
+          {
+            "index": 4,
+            "eval_count": 49,
+            "eval_duration": 2614158000,
+            "prompt_eval_count": 1252,
+            "prompt_eval_duration": 57806000,
+            "prompt_eval_cached_count": 1251,
+            "wall_s": 2.6879172089975327,
+            "first_output_s": 0.06533987500006333,
+            "first_answer_s": 0.06533987500006333,
+            "truncated": false,
+            "done_reason": "stop"
+          }
+        ]
+      },
+      "started_at": "2026-11-09T04:08:03.691109-05:00",
+      "finished_at": "2026-11-09T04:09:30.065502-05:00",
+      "controller": "m3"
+    },
+    {
+      "host": "rtx3080",
+      "model": "qwen2.5:14b",
+      "session_id": "7e8748ae-01d0-40fb-a480-b266035c1e56",
+      "ollama": "0.32.5",
+      "cfg": {
+        "num_ctx": 2048
+      },
+      "model_identity": {
+        "name": "qwen2.5:14b",
+        "digest": "7cdf5a0187d5c58cc5d369b255592f7841d1c4696d45a8c8a9489440385b22f6",
+        "size": 8988124069,
+        "details": {
+          "parent_model": "",
+          "format": "gguf",
+          "family": "qwen2",
+          "families": [
+            "qwen2"
+          ],
+          "parameter_size": "14.8B",
+          "quantization_level": "Q4_K_M",
+          "context_length": 32768,
+          "embedding_length": 5120
+        }
+      },
+      "source_sha256": {
+        "bench.py": "866ebd4a896c30598db4b08e2329876aa199c689bc03209f6fcee6d17362f7fc",
+        "tasks.json": "af36491ba34da8c3396870d40b8a6006bce939ea5b530033300c1f17b21f8d5f",
+        "ladders.json": "6cdd98b5223b410d844de74706dba25a39f0acf6bd983c430080fb27f6b39844"
+      },
+      "ts": "2026-11-09T04:08:08.144352-05:00",
+      "status": "complete",
+      "vram_pct": 100,
+      "size_gb": 9.1,
+      "quality": {
+        "passed": 7,
+        "total": 8,
+        "failed_tasks": [
+          "arith_multi"
+        ],
+        "truncated_tasks": 0
+      },
+      "short": {
+        "median_gen_tps": 71.9,
+        "min_gen_tps": 71.5,
+        "max_gen_tps": 71.9,
+        "median_first_output_s": 0.266,
+        "median_wall_s": 2.329,
+        "samples": [
+          {
+            "index": 0,
+            "eval_count": 143,
+            "eval_duration": 2000577000,
+            "prompt_eval_count": 45,
+            "prompt_eval_duration": 28634000,
+            "prompt_eval_cached_count": null,
+            "wall_s": 2.268441124993842,
+            "first_output_s": 0.2668554999982007,
+            "first_answer_s": 0.2668554999982007,
+            "truncated": false,
+            "done_reason": "stop"
+          },
+          {
+            "index": 1,
+            "eval_count": 149,
+            "eval_duration": 2071074000,
+            "prompt_eval_count": 45,
+            "prompt_eval_duration": 14714000,
+            "prompt_eval_cached_count": null,
+            "wall_s": 2.3384869580040686,
+            "first_output_s": 0.26583566699991934,
+            "first_answer_s": 0.26583566699991934,
+            "truncated": false,
+            "done_reason": "stop"
+          },
+          {
+            "index": 2,
+            "eval_count": 149,
+            "eval_duration": 2071310000,
+            "prompt_eval_count": 45,
+            "prompt_eval_duration": 14605000,
+            "prompt_eval_cached_count": null,
+            "wall_s": 2.3462130000116304,
+            "first_output_s": 0.273789291997673,
+            "first_answer_s": 0.273789291997673,
+            "truncated": false,
+            "done_reason": "stop"
+          },
+          {
+            "index": 3,
+            "eval_count": 149,
+            "eval_duration": 2072090000,
+            "prompt_eval_count": 45,
+            "prompt_eval_duration": 14572000,
+            "prompt_eval_cached_count": null,
+            "wall_s": 2.3274104579759296,
+            "first_output_s": 0.2534334159863647,
+            "first_answer_s": 0.2534334159863647,
+            "truncated": false,
+            "done_reason": "stop"
+          },
+          {
+            "index": 4,
+            "eval_count": 149,
+            "eval_duration": 2074847000,
+            "prompt_eval_count": 45,
+            "prompt_eval_duration": 14535000,
+            "prompt_eval_cached_count": null,
+            "wall_s": 2.32895374999498,
+            "first_output_s": 0.2525286669842899,
+            "first_answer_s": 0.2525286669842899,
+            "truncated": false,
+            "done_reason": "stop"
+          }
+        ]
+      },
+      "long": {
+        "median_gen_tps": 69.9,
+        "min_gen_tps": 69.4,
+        "max_gen_tps": 70.0,
+        "median_first_output_s": 0.265,
+        "median_wall_s": 0.927,
+        "samples": [
+          {
+            "index": 0,
+            "eval_count": 46,
+            "eval_duration": 663003000,
+            "prompt_eval_count": 1252,
+            "prompt_eval_duration": 480446000,
+            "prompt_eval_cached_count": null,
+            "wall_s": 1.3939586660126224,
+            "first_output_s": 0.7268212499911897,
+            "first_answer_s": 0.7268212499911897,
+            "truncated": false,
+            "done_reason": "stop"
+          },
+          {
+            "index": 1,
+            "eval_count": 46,
+            "eval_duration": 658589000,
+            "prompt_eval_count": 1252,
+            "prompt_eval_duration": 17615000,
+            "prompt_eval_cached_count": null,
+            "wall_s": 0.9275449579872657,
+            "first_output_s": 0.26479179100715555,
+            "first_answer_s": 0.26479179100715555,
+            "truncated": false,
+            "done_reason": "stop"
+          },
+          {
+            "index": 2,
+            "eval_count": 46,
+            "eval_duration": 657500000,
+            "prompt_eval_count": 1252,
+            "prompt_eval_duration": 17613000,
+            "prompt_eval_cached_count": null,
+            "wall_s": 0.9259155830077361,
+            "first_output_s": 0.26427966699702665,
+            "first_answer_s": 0.26427966699702665,
+            "truncated": false,
+            "done_reason": "stop"
+          },
+          {
+            "index": 3,
+            "eval_count": 46,
+            "eval_duration": 657867000,
+            "prompt_eval_count": 1252,
+            "prompt_eval_duration": 17494000,
+            "prompt_eval_cached_count": null,
+            "wall_s": 0.9272732909885235,
+            "first_output_s": 0.2654615830106195,
+            "first_answer_s": 0.2654615830106195,
+            "truncated": false,
+            "done_reason": "stop"
+          },
+          {
+            "index": 4,
+            "eval_count": 46,
+            "eval_duration": 657691000,
+            "prompt_eval_count": 1252,
+            "prompt_eval_duration": 17538000,
+            "prompt_eval_cached_count": null,
+            "wall_s": 0.9250967920233961,
+            "first_output_s": 0.26343445901875384,
+            "first_answer_s": 0.26343445901875384,
+            "truncated": false,
+            "done_reason": "stop"
+          }
+        ]
+      },
+      "started_at": "2026-11-09T04:07:30.986656-05:00",
+      "finished_at": "2026-11-09T04:08:08.144810-05:00",
+      "controller": "m3"
+    },
+    {
+      "host": "rtx3080",
+      "model": "qwen2.5:7b",
+      "session_id": "4f1295a0-2911-485b-89f1-7bcc93bf84ee",
+      "ollama": "0.32.5",
+      "cfg": {
+        "num_ctx": 2048
+      },
+      "model_identity": {
+        "name": "qwen2.5:7b",
+        "digest": "845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e",
+        "size": 4683087332,
+        "details": {
+          "parent_model": "",
+          "format": "gguf",
+          "family": "qwen2",
+          "families": [
+            "qwen2"
+          ],
+          "parameter_size": "7.6B",
+          "quantization_level": "Q4_K_M",
+          "context_length": 32768,
+          "embedding_length": 3584
+        }
+      },
+      "source_sha256": {
+        "bench.py": "866ebd4a896c30598db4b08e2329876aa199c689bc03209f6fcee6d17362f7fc",
+        "tasks.json": "af36491ba34da8c3396870d40b8a6006bce939ea5b530033300c1f17b21f8d5f",
+        "ladders.json": "6cdd98b5223b410d844de74706dba25a39f0acf6bd983c430080fb27f6b39844"
+      },
+      "ts": "2026-11-09T04:12:52.408438-05:00",
+      "status": "complete",
+      "vram_pct": 100,
+      "size_gb": 4.6,
+      "quality": {
+        "passed": 7,
+        "total": 8,
+        "failed_tasks": [
+          "arith_multi"
+        ],
+        "truncated_tasks": 0
+      },
+      "short": {
+        "median_gen_tps": 125.5,
+        "min_gen_tps": 124.4,
+        "max_gen_tps": 125.5,
+        "median_first_output_s": 0.253,
+        "median_wall_s": 1.247,
+        "samples": [
+          {
+            "index": 0,
+            "eval_count": 124,
+            "eval_duration": 997072000,
+            "prompt_eval_count": 45,
+            "prompt_eval_duration": 15614000,
+            "prompt_eval_cached_count": null,
+            "wall_s": 1.2512724170228466,
+            "first_output_s": 0.25289104200783186,
+            "first_answer_s": 0.25289104200783186,
+            "truncated": false,
+            "done_reason": "stop"
+          },
+          {
+            "index": 1,
+            "eval_count": 124,
+            "eval_duration": 989811000,
+            "prompt_eval_count": 45,
+            "prompt_eval_duration": 8604000,
+            "prompt_eval_cached_count": null,
+            "wall_s": 1.246503959002439,
+            "first_output_s": 0.25520650000544265,
+            "first_answer_s": 0.25520650000544265,
+            "truncated": false,
+            "done_reason": "stop"
+          },
+          {
+            "index": 2,
+            "eval_count": 124,
+            "eval_duration": 988330000,
+            "prompt_eval_count": 45,
+            "prompt_eval_duration": 8792000,
+            "prompt_eval_cached_count": null,
+            "wall_s": 1.2374716659833211,
+            "first_output_s": 0.24777549999998882,
+            "first_answer_s": 0.24777549999998882,
+            "truncated": false,
+            "done_reason": "stop"
+          },
+          {
+            "index": 3,
+            "eval_count": 124,
+            "eval_duration": 988080000,
+            "prompt_eval_count": 45,
+            "prompt_eval_duration": 8564000,
+            "prompt_eval_cached_count": null,
+            "wall_s": 1.2498269169882406,
+            "first_output_s": 0.26035716698970646,
+            "first_answer_s": 0.26035716698970646,
+            "truncated": false,
+            "done_reason": "stop"
+          },
+          {
+            "index": 4,
+            "eval_count": 124,
+            "eval_duration": 988285000,
+            "prompt_eval_count": 45,
+            "prompt_eval_duration": 8568000,
+            "prompt_eval_cached_count": null,
+            "wall_s": 1.2330810409912374,
+            "first_output_s": 0.24350562499603257,
+            "first_answer_s": 0.24350562499603257,
+            "truncated": false,
+            "done_reason": "stop"
+          }
+        ]
+      },
+      "long": {
+        "median_gen_tps": 124.9,
+        "min_gen_tps": 124.4,
+        "max_gen_tps": 125.0,
+        "median_first_output_s": 0.262,
+        "median_wall_s": 0.609,
+        "samples": [
+          {
+            "index": 0,
+            "eval_count": 43,
+            "eval_duration": 345609000,
+            "prompt_eval_count": 1252,
+            "prompt_eval_duration": 234353000,
+            "prompt_eval_cached_count": null,
+            "wall_s": 0.8306892499967944,
+            "first_output_s": 0.4813815420202445,
+            "first_answer_s": 0.4813815420202445,
+            "truncated": false,
+            "done_reason": "stop"
+          },
+          {
+            "index": 1,
+            "eval_count": 43,
+            "eval_duration": 343891000,
+            "prompt_eval_count": 1252,
+            "prompt_eval_duration": 10629000,
+            "prompt_eval_cached_count": null,
+            "wall_s": 0.6043941249954514,
+            "first_output_s": 0.25703283297480084,
+            "first_answer_s": 0.25703283297480084,
+            "truncated": false,
+            "done_reason": "stop"
+          },
+          {
+            "index": 2,
+            "eval_count": 43,
+            "eval_duration": 344420000,
+            "prompt_eval_count": 1252,
+            "prompt_eval_duration": 10346000,
+            "prompt_eval_cached_count": null,
+            "wall_s": 0.6113820000027772,
+            "first_output_s": 0.26332237498718314,
+            "first_answer_s": 0.26332237498718314,
+            "truncated": false,
+            "done_reason": "stop"
+          },
+          {
+            "index": 3,
+            "eval_count": 43,
+            "eval_duration": 344220000,
+            "prompt_eval_count": 1252,
+            "prompt_eval_duration": 10420000,
+            "prompt_eval_cached_count": null,
+            "wall_s": 0.6019452920008916,
+            "first_output_s": 0.2539991670055315,
+            "first_answer_s": 0.2539991670055315,
+            "truncated": false,
+            "done_reason": "stop"
+          },
+          {
+            "index": 4,
+            "eval_count": 43,
+            "eval_duration": 343944000,
+            "prompt_eval_count": 1252,
+            "prompt_eval_duration": 10438000,
+            "prompt_eval_cached_count": null,
+            "wall_s": 0.6091218340152409,
+            "first_output_s": 0.2616844169970136,
+            "first_answer_s": 0.2616844169970136,
+            "truncated": false,
+            "done_reason": "stop"
+          }
+        ]
+      },
+      "started_at": "2026-11-09T04:12:34.328208-05:00",
+      "finished_at": "2026-11-09T04:12:52.410739-05:00",
+      "controller": "m3"
+    }
+  ],
+  "validation": {
+    "completed_calls": 72,
+    "speed_calls": 40,
+    "smoke_calls": 32,
+    "summary_journal_match": true,
+    "matched_model_digests": true,
+    "actual_allocation_context_2048": true
+  },
+  "cleanup": {
+    "rtx3080": "Experiment models unloaded; original server retained; 47 MiB GPU memory and 0% utilization afterwards. New 7B files retained.",
+    "m3": "Owned temporary service exited successfully; API port closed. Model files retained privately. OS swap remained elevated; background applications were not reset.",
+    "rtx2070s": "No mutations sent; existing model remained loaded. Inference/service business functionality was not exercised."
+  },
+  "mac_swap_snapshot_mib": {
+    "preflight": 7362.19,
+    "immediately_before": 7330.19,
+    "after_service_exit": 14059.31,
+    "causality": "Snapshots include concurrent background work; the increase cannot be attributed solely to inference."
+  },
+  "overlap": {
+    "controller": "m3",
+    "intervals": [
+      {
+        "from": "2026-11-09T04:08:03.691109-05:00",
+        "to": "2026-11-09T04:08:08.144810-05:00",
+        "conditions": [
+          "m3/7b",
+          "rtx3080/14b"
+        ]
+      },
+      {
+        "from": "2026-11-09T04:12:34.328208-05:00",
+        "to": "2026-11-09T04:12:48.947980-05:00",
+        "conditions": [
+          "m3/14b",
+          "rtx3080/7b"
+        ]
+      }
+    ],
+    "meaning": "Condition lifetimes include warm-up and all tasks. Timing overlap is confirmed from start/finish events; no hardware-only latency claim."
+  },
+  "collector_configuration": "ladders.json contains the exact private-run group added to the original ladder; bench.py and tasks.json were copied byte-for-byte from the reviewed repository. No private endpoints are included."
+}

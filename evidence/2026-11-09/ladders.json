@@ -1,0 +1,64 @@
+{
+  "quant": [
+    {
+      "model": "qwen2.5:14b-instruct-q3_K_M"
+    },
+    {
+      "model": "qwen2.5:14b"
+    },
+    {
+      "model": "qwen2.5:14b-instruct-q6_K"
+    },
+    {
+      "model": "qwen2.5:14b-instruct-q8_0"
+    }
+  ],
+  "moe": [
+    {
+      "model": "qwen3:14b",
+      "think": false
+    },
+    {
+      "model": "qwen3:30b-a3b",
+      "think": false,
+      "max_tokens": 3000,
+      "note": "reasons out loud even with think=false; answers cannot be auto-graded, speed only"
+    },
+    {
+      "model": "qwen3:30b-a3b-instruct-2507-q4_K_M"
+    },
+    {
+      "model": "gpt-oss:20b",
+      "think": "low",
+      "max_tokens": 1200
+    },
+    {
+      "model": "qwen3:32b",
+      "think": false
+    }
+  ],
+  "card2": [
+    {
+      "model": "mistral"
+    },
+    {
+      "model": "qwen2.5:7b"
+    },
+    {
+      "model": "qwen2.5:14b-instruct-q3_K_M"
+    },
+    {
+      "model": "qwen2.5:14b"
+    }
+  ],
+  "overnight": [
+    {
+      "model": "qwen2.5:7b",
+      "num_ctx": 2048
+    },
+    {
+      "model": "qwen2.5:14b",
+      "num_ctx": 2048
+    }
+  ]
+}

@@ -22,10 +22,16 @@ def latest(pattern, key, gpu=None):
     so two machines measured on the same date never mix. Host fields/filenames are never shown."""
     rows = {}
     for f in sorted(glob.glob(str(HERE / "results" / pattern))):
+        if f.endswith(("-v2.jsonl", "-v2.events.jsonl")):
+            continue  # even an interrupted v2 write cannot break this legacy publication
         if pattern == "*.jsonl" and f.endswith("-ctx.jsonl"):
             continue
-        for line in open(f):
+        for line in pathlib.Path(f).read_text().splitlines():
             r = json.loads(line)
+            # This publication describes the original experiment only. New sessions
+            # require a reviewed comparison, not silent replacement of historical rows.
+            if r.get("schema_version", 1) != 1:
+                continue
             if gpu and gpu not in r.get("note", ""):
                 continue
             if key(r) not in rows or r["ts"] >= rows[key(r)]["ts"]:
@@ -104,23 +110,23 @@ def main():
                 f"{r['short']['gen_tps']} | {r['long']['gen_tps']} | {r['cold_load_s']} | {tasks} |")
 
     # ---------- RESULTS.md ----------
-    md = ["# Results", "", "## RTX 3080 12 GB", "", "Ollama 0.32.5; measurements on 2026-11-02. Latest row per model on this GPU. "
+    md = ["# Results", "", "## RTX 3080 12 GB", "", "Ollama 0.32.5; measurements on 2026-11-02. Latest legacy row per model on this GPU; schema 2 sessions are excluded. "
           "Under the harness default, generation rates are medians of three calls per prompt (run count was "
           "not saved); load and tasks are single calls. The stored cold_load_s field is a first-request "
-          "load duration, not a verified cold start: the harness does not force an unload. "
+          "load duration, not a verified cold start: that historical harness did not force an unload. "
           "GPU share is Ollama's reported allocation ratio. See [REPORT.md](REPORT.md) for method and limitations.", "",
           "| model | allocation GB | GPU share | short gen tok/s | long gen tok/s | first load s | tasks |",
           "|---|---:|---:|---:|---:|---:|---|"]
     for r in models:
         md.append(result_row(r))
-    md += ["", "## RTX 2070 SUPER 8 GB", "", "Ollama 0.32.1; measurements on 2026-11-05. Latest row per model on this GPU. "
+    md += ["", "## RTX 2070 SUPER 8 GB", "", "Ollama 0.32.1; measurements on 2026-11-05. Latest legacy row per model on this GPU; schema 2 sessions are excluded. "
            "Generation rates use the same harness default; run count was not saved. "
            "Mistral allocation and GPU share were not recorded because the earlier `/api/ps` lookup missed its `:latest` tag.", "",
            "| model | allocation GB | GPU share | short gen tok/s | long gen tok/s | first load s | tasks |",
            "|---|---:|---:|---:|---:|---:|---|"]
     for r in second_models:
         md.append(result_row(r))
-    md += ["", "## Apple M3 16 GB unified", "", "Ollama 0.40.14; measurements on 2026-11-05. Latest row per model on this machine. "
+    md += ["", "## Apple M3 16 GB unified", "", "Ollama 0.40.14; measurements on 2026-11-05. Latest legacy row per model on this machine; schema 2 sessions are excluded. "
            "Generation rates use the same harness default; run count was not saved. "
            "GPU share is Ollama's reported allocation ratio in a shared CPU/GPU memory pool, not a discrete VRAM boundary.", "",
            "| model | allocation GB | GPU share | short gen tok/s | long gen tok/s | first load s | tasks |",
@@ -190,7 +196,7 @@ def main():
         lines += f'<polyline class="ln {kind}" points="{" ".join(f"{a:.1f},{b:.1f}" for a, b in pl)}"/>'
         for i, c in enumerate(cw):
             if c not in sw: continue
-            s = sw[c]; x, y = pl[i]
+            s = sw[c]; x, y = cx(i), sy(sw[c]["gen_tps"], 80)
             tip = f"{NICE.get(m, m)} at {cl[i]} context: {s['gen_tps']} tok/s, {s['vram_pct']}% reported GPU allocation share, {s['size_gb']} GB"
             shape = (f'<path class="mk moe" d="M{x:.1f} {y-7:.1f} L{x+7:.1f} {y:.1f} L{x:.1f} {y+7:.1f} L{x-7:.1f} {y:.1f}Z"/>' if kind == "moe"
                      else f'<circle class="mk dense" cx="{x:.1f}" cy="{y:.1f}" r="5.5"/>')
@@ -205,7 +211,7 @@ def main():
 
     article = render_report((HERE / "REPORT.md").read_text())
     charts = f'''<section class="charts" aria-label="RTX 3080 12 GB benchmark charts"><h2>RTX 3080 12 GB generation speed charts</h2>
-<p>Both charts show only RTX 3080 12 GB measurements. The scatter plot uses the latest speed row per tag. The thinking MoE point overlaps the instruct point and is omitted from that plot. The context chart uses the thinking tag; each setting has one call. All three machines appear in the tables below.</p>
+<p>Both charts show only RTX 3080 12 GB measurements. The scatter plot uses the latest legacy speed row per tag; new schema 2 sessions are excluded. The thinking MoE point overlaps the instruct point and is omitted from that plot. The context chart uses the thinking tag; each setting has one call. All three machines appear in the tables below.</p>
 <div class="chart-grid"><figure><figcaption>GPU allocation share and generation speed</figcaption><div class="leg"><span><i class="d"></i>dense</span><span><i class="m"></i>MoE</span></div><div class="chart-scroll">{chart1}</div></figure>
 <figure><figcaption>Generation speed by context window</figcaption><div class="leg"><span><i class="d"></i>14B Q4</span><span><i class="m"></i>30B-A3B thinking MoE</span></div><div class="chart-scroll">{chart2}</div></figure></div></section>'''
     article = article.replace('<h2 id="results">Results</h2>', charts + '<h2 id="results">Results</h2>', 1)
@@ -223,7 +229,7 @@ main{{max-width:1120px;margin:auto;padding:50px 24px 100px}}h1{{font-size:clamp(
 #tip{{position:fixed;pointer-events:none;background:var(--ink);color:var(--bg);padding:8px 10px;border-radius:8px;font-size:14px;max-width:min(320px,80vw);display:none;z-index:9}}
 @media(max-width:800px){{.chart-grid,.findings{{grid-template-columns:1fr}}.chart-scroll{{overflow-x:auto}}.chart-scroll svg{{min-width:620px}}}}
 @media(max-width:520px){{main{{padding:32px 16px 70px}}.top-inner{{padding:12px 16px;display:block}}nav{{margin-top:6px;gap:12px}}h2{{margin-top:44px}}figure{{padding:14px}}.findings li{{padding:15px}}}}
-</style></head><body><header class="top"><div class="top-inner"><span class="brand">llmbench / technical report</span><nav aria-label="Report sections"><a href="#the-short-version">Short version</a><a href="#summary">Summary</a><a href="#results">Results</a><a href="#limitations-of-these-benchmarks">Limitations</a><a href="#training-on-the-car-data-what-we-did-and-its-limits">Car data</a><a href="#what-128-gb-of-unified-memory-would-let-us-test-next">Next tests</a><a href="#further-reading">Reading</a></nav></div></header><main><article>{article}</article></main><div id="tip"></div><script>
+</style></head><body><header class="top"><div class="top-inner"><span class="brand">llmbench / technical report</span><nav aria-label="Report sections"><a href="#the-short-version">Short version</a><a href="#follow-up-what-i-actually-reran-on-9-november">9 November follow-up</a><a href="#summary">Original experiment</a><a href="#results">Results</a><a href="#limitations-of-these-benchmarks">Limitations</a><a href="#what-i-want-local-and-frontier-models-to-do">Hybrid workflow</a><a href="#what-i-would-test-with-two-halos">Two Halos</a><a href="EVIDENCE.md">Evidence</a><a href="#further-reading">Reading</a></nav></div></header><main><article>{article}</article></main><div id="tip"></div><script>
 const tip=document.getElementById('tip');document.querySelectorAll('[data-tip]').forEach(e=>{{
 e.addEventListener('mousemove',v=>{{tip.textContent=e.dataset.tip;tip.style.display='block';tip.style.left=Math.max(8,Math.min(v.clientX+14,innerWidth-tip.offsetWidth-8))+'px';tip.style.top=(v.clientY+14)+'px'}});
 e.addEventListener('mouseleave',()=>tip.style.display='none');

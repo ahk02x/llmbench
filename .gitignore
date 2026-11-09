@@ -3,3 +3,12 @@ __pycache__/
 _context/
 bench.local.json
 private/
+.peer/
+.codex-device-audit.json
+.env
+.env.*
+*.private.json
+evidence/*/raw/
+# New runs contain verbatim prompts, answers and free-text notes. Review before publishing.
+results/*-v2.jsonl
+results/*-v2.events.jsonl
